@@ -118,15 +118,6 @@ def softmax_probs(pred):
 st.title("Clasificador de Neumonia en Rayos X")
 st.caption("Sube una imagen. La app devuelve probabilidades para: Neumonia, Normal e Imagen no valida.")
 
-with st.expander("Ajustes del modelo", expanded=False):
-    ts = st.text_input("Tamano de entrada (ancho,alto)", f"{TARGET_SIZE[0]},{TARGET_SIZE[1]}")
-    ch = st.selectbox("Canales esperados por el modelo", [1,3], index=1 if MODEL_CHANNELS==3 else 0)
-    inv_base = st.slider("Sensibilidad 'Imagen no valida' (solo modelos binarios)", 0.0, 1.0, THRESH_INVALID_BASE, 0.01)
-    try:
-        w,h = [int(x.strip()) for x in ts.split(",")]
-        TARGET_SIZE = (w,h); MODEL_CHANNELS = int(ch); THRESH_INVALID_BASE = float(inv_base)
-    except:
-        st.warning("Usa el formato ancho,alto")
 
 uploaded = st.file_uploader("Sube una imagen (JPG/PNG)", type=["jpg","jpeg","png"])
 
