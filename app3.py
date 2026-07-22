@@ -19,7 +19,7 @@ CLASS_NAMES_3 = ["NORMAL", "NOT_CXR", "PNEUMONIA"]
 # sensibilidad para gate solo cuando el modelo es binario
 THRESH_INVALID_BASE = 0.80
 
-st.set_page_config(page_title="Clasificador de Neumonia por Rayos X", page_icon="🫁")
+st.set_page_config(page_title="Pneumonia X-Ray Classifier", page_icon="🫁")
 
 # ===== Estilos =====
 st.markdown("""
@@ -47,8 +47,8 @@ def load_model():
             except Exception as e:
                 last_err = e
     if last_err:
-        raise RuntimeError(f"No pude cargar el modelo. Ultimo error: {last_err}")
-    raise FileNotFoundError(f"No encontre archivos: {MODEL_PATHS}")
+        raise RuntimeError(f"Could not load the model. Last error: {last_err}")
+    raise FileNotFoundError(f"Files not found: {MODEL_PATHS}")
 
 def to_array(img, channels=MODEL_CHANNELS):
     if channels == 1:
@@ -115,11 +115,11 @@ def softmax_probs(pred):
     return e / np.sum(e)
 
 # ===== UI =====
-st.title("Clasificador de Neumonia en Rayos X")
-st.caption("Sube una imagen. La app devuelve probabilidades para: Neumonia, Normal e Imagen no valida.")
+st.title("Pneumonia X-Ray Classifier")
+st.caption("Upload an image. The app returns probabilities for: Pneumonia, Normal, and Invalid Image.")
 
 
-uploaded = st.file_uploader("Sube una imagen (JPG/PNG)", type=["jpg","jpeg","png"])
+uploaded = st.file_uploader("Upload an image (JPG/PNG)", type=["jpg","jpeg","png"])
 
 if uploaded:
     raw = uploaded.read()
@@ -128,10 +128,10 @@ if uploaded:
     col_img, col_pred = st.columns([1, 1.2])
 
     with col_img:
-        st.image(img, caption="Vista previa", use_column_width=False, width=320)
+        st.image(img, caption="Preview", use_column_width=False, width=320)
 
     with col_pred:
-        with st.spinner("Procesando..."):
+        with st.spinner("Processing..."):
             model, model_path = load_model()
             x = to_array(img, channels=MODEL_CHANNELS)
             pred = model.predict(x, verbose=0)
@@ -163,25 +163,25 @@ if uploaded:
 
         # ---- tarjeta de resultados ----
         st.markdown("<div class='prob-card'>", unsafe_allow_html=True)
-        st.markdown("<div class='mini'>Probabilidades</div>", unsafe_allow_html=True)
+        st.markdown("<div class='mini'>Probabilities</div>", unsafe_allow_html=True)
         m1, m2, m3 = st.columns(3)
-        m1.metric("Neumonia", f"{p_neu*100:.1f}%")
+        m1.metric("Pneumonia", f"{p_neu*100:.1f}%")
         m2.metric("Normal", f"{p_norm*100:.1f}%")
-        m3.metric("Imagen no valida", f"{p_invalid*100:.1f}%")
+        m3.metric("Invalid Image", f"{p_invalid*100:.1f}%")
         st.markdown("<hr/>", unsafe_allow_html=True)
 
-        st.progress(min(1.0, p_neu), text=f"Neumonia: {p_neu:.4f}")
+        st.progress(min(1.0, p_neu), text=f"Pneumonia: {p_neu:.4f}")
         st.progress(min(1.0, p_norm), text=f"Normal: {p_norm:.4f}")
-        st.progress(min(1.0, p_invalid), text=f"No valida: {p_invalid:.4f}")
+        st.progress(min(1.0, p_invalid), text=f"Invalid: {p_invalid:.4f}")
 
-        etiqueta = ["Neumonia","Normal","Imagen no valida"][int(np.argmax([p_neu,p_norm,p_invalid]))]
+        etiqueta = ["Pneumonia","Normal","Invalid Image"][int(np.argmax([p_neu,p_norm,p_invalid]))]
         st.markdown("<br/>", unsafe_allow_html=True)
-        st.info(f"Prediccion: {etiqueta}")
+        st.info(f"Prediction: {etiqueta}")
         st.markdown("</div>", unsafe_allow_html=True)
 
         if not use_three_head:
-            st.caption("Nota: usando compuerta heuristica para 'Imagen no valida' porque el modelo cargado no es de 3 clases.")
+            st.caption("Note: using a heuristic gate for 'Invalid Image' because the loaded model is not a 3-class model.")
         else:
-            st.caption(f"Modelo detectado 3 clases: {model_path}")
+            st.caption(f"3-class model detected: {model_path}")
 else:
-    st.write("Sube una imagen para comenzar")
+    st.write("Upload an image to get started")
